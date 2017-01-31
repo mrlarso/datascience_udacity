@@ -33,7 +33,25 @@ for record in daily_engagement:
     record['total_minutes_visited'] = float(record['total_minutes_visited'])
     record['projects_completed'] = int(float(record['projects_completed']))
     record['utc_date'] = parse_date(record['utc_date'])
+    record['account_key'] = record.pop('acct')
 
 for submission in project_submissions:
     submission['completion_date'] = parse_date(submission['completion_date'])
     submission['creation_date'] = parse_date(submission['creation_date'])
+
+def get_students_and_unique(data):
+    num_rows = len(data)
+    unique_students = set(datum['account_key'] for datum in data)
+    num_unique_students = len(unique_students)
+    return num_rows, unique_students, num_unique_students
+
+enrollment_num_rows, enrollment_unique_students, enrollment_num_unique_students = get_students_and_unique(enrollments)
+
+engagement_num_rows, engagement_unique_students, engagement_num_unique_students = get_students_and_unique(daily_engagement)
+
+submission_num_rows, submission_unique_students, submission_num_unique_students = get_students_and_unique(project_submissions)
+
+
+print 'enrollment', enrollment_num_unique_students
+print 'engagment', engagement_num_unique_students
+print 'sumission', submission_num_unique_students
