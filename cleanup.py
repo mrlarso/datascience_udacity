@@ -1,4 +1,5 @@
 import unicodecsv
+from datetime import timedelta as td
 from datetime import datetime as dt
 
 def read_csv(filename):
@@ -20,6 +21,14 @@ def parse_maybe_int(i):
         return None
     return int(i)
 
+def separate_udacity(data):
+    data = data
+    udacity_data = []
+    for datum in data:
+        if datum['is_udacity']:
+            udacity_data.add(data.pop(datum))
+    return udacity_data, data
+
 for enrollment in enrollments:
     enrollment['join_date'] = parse_date(enrollment['join_date'])
     enrollment['cancel_date'] = parse_date(enrollment['cancel_date'])
@@ -39,11 +48,19 @@ for submission in project_submissions:
     submission['completion_date'] = parse_date(submission['completion_date'])
     submission['creation_date'] = parse_date(submission['creation_date'])
 
+
 def get_students_and_unique(data):
     num_rows = len(data)
     unique_students = set(datum['account_key'] for datum in data)
     num_unique_students = len(unique_students)
     return num_rows, unique_students, num_unique_students
+
+udacity_users = set()
+
+for enrollment in enrollments:
+    if enrollment["is_udacity"]:
+        udacity_users.add(enrollment['account_key'])
+
 
 enrollment_num_rows, enrollment_unique_students, enrollment_num_unique_students = get_students_and_unique(enrollments)
 
@@ -51,7 +68,28 @@ engagement_num_rows, engagement_unique_students, engagement_num_unique_students 
 
 submission_num_rows, submission_unique_students, submission_num_unique_students = get_students_and_unique(project_submissions)
 
+def get_non_udacity(data):
+    non_udacity = []
+    for datum in data:
+        if datum["account_key"] not in udacity_users:
+            non_udacity.append(datum)
+    return non_udacity
 
-print 'enrollment', enrollment_num_unique_students
-print 'engagment', engagement_num_unique_students
-print 'sumission', submission_num_unique_students
+non_udacity_enrollments = get_non_udacity(enrollments)
+non_udacity_engagement = get_non_udacity(daily_engagement)
+non_udacity_submission = get_non_udacity(project_submissions)
+
+paid_students={}
+for enrollment in non_udacity_enrollments:
+    if not enrollment["is_canceled"] or enrollment["days_to_cancel"] > 7:
+        account_key = enrollment["account_key"]
+        if account_key not in paid_students or paid_students[account_key] < enrollment["join_date"]:
+            paid_students[account_key] = enrollment["join_date"]
+
+paid_engagement_in_first_week = []
+for engagement in daily_engagement:
+    acckey = engagement["account_key"]
+    engdate = engagement['utc_date']
+    if acckey in paid_students and engdate - paid_students[acckey] < td(7):
+        paid_engagement_in_first_week.append(engagement)
+print len(paid_engagement_in_first_week)
