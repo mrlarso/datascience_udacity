@@ -1,6 +1,8 @@
 import unicodecsv
 from datetime import timedelta as td
 from datetime import datetime as dt
+from collections import defaultdict as defaultdict
+import numpy
 
 def read_csv(filename):
     with open(filename, 'rb') as f:
@@ -92,4 +94,35 @@ for engagement in daily_engagement:
     engdate = engagement['utc_date']
     if acckey in paid_students and engdate - paid_students[acckey] < td(7):
         paid_engagement_in_first_week.append(engagement)
-print len(paid_engagement_in_first_week)
+
+epifw_nonzero = []
+for engagement in paid_engagement_in_first_week:
+    if engagement['total_minutes_visited'] > 0:
+        epifw_nonzero.append(engagement)
+
+epifw_nonzero = paid_engagement_in_first_week
+# engagement_times_first_week = []
+# for engagement in epifw_nonzero:
+#     engagement_times_first_week.append(engagement['total_minutes_visited'])
+
+# engagements_per_student = {}
+# for engagement in epifw_nonzero:
+#     acc_key = engagement['account_key']
+#     if acc_key not in engagements_per_student:
+#         engagements_per_student[acc_key] = [engagement]
+#     else:
+#         engagements_per_student[acc_key].append(engagement)
+
+engagements_per_student = defaultdict(list)
+for engagement in epifw_nonzero:
+    acc_key = engagement['account_key']
+    engagements_per_student[acc_key].append(engagement)
+
+
+total_time_per_student = {}
+for student in engagements_per_student:
+    total_time_per_student[student] = sum([record['total_minutes_visited'] for record in engagements_per_student[student]])
+
+#average_time_per_student = numpy.mean([total_time_per_student[student] for student in total_time_per_student])
+average_time_per_student = numpy.mean(total_time_per_student.values())
+print average_time_per_student
