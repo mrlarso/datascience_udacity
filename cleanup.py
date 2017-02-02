@@ -92,7 +92,7 @@ paid_engagement_in_first_week = []
 for engagement in daily_engagement:
     acckey = engagement["account_key"]
     engdate = engagement['utc_date']
-    if acckey in paid_students and engdate - paid_students[acckey] < td(7):
+    if acckey in paid_students and td(0) < engdate - paid_students[acckey] < td(7):
         paid_engagement_in_first_week.append(engagement)
 
 epifw_nonzero = []
@@ -123,6 +123,10 @@ total_time_per_student = {}
 for student in engagements_per_student:
     total_time_per_student[student] = sum([record['total_minutes_visited'] for record in engagements_per_student[student]])
 
-#average_time_per_student = numpy.mean([total_time_per_student[student] for student in total_time_per_student])
 average_time_per_student = numpy.mean(total_time_per_student.values())
-print average_time_per_student
+
+
+print 'avreage', average_time_per_student
+print 'standard_deviation', numpy.std(total_time_per_student.values())
+print 'minimum', numpy.min(total_time_per_student.values())
+print 'maximum', numpy.max(total_time_per_student.values())
